@@ -1,6 +1,7 @@
 from PrimirestAPI import Primirest, MenuDay
 from getpass import getpass
 import re
+from datetime import date
 
 def get_main_courses(consumptions):
     ret = []
@@ -20,5 +21,15 @@ password = getpass("Heslo: ")
 primirest = Primirest(username=username, password=password)
 
 print("Přihlášen jako: " + primirest.boarder.name)
+
+# print(primirest.boarder.account)
+# print(primirest.unit.purchase_places[0].menus[2].menu_days[0].items)
+# print(primirest.boarder.account)
+# print(primirest.cancel_order(primirest.unit.purchase_places[0].menus[2].menu_days[0]))
+# print(primirest.unit.purchase_places[0].menus[2].menu_days[0].items)
+# print(primirest.boarder.account)
+# print(primirest.order(primirest.unit.purchase_places[0].menus[2].menu_days[0].items[0]))
+# print(primirest.unit.purchase_places[0].menus[2].menu_days[0].items)
+# print(primirest.boarder.account)
 
 primirest.logout()
