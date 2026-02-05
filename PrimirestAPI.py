@@ -55,9 +55,17 @@ class MenuItem:
     description: str
     price: float
     can_order: bool
-    is_ordered: bool = False
-    order_info: Optional[Dict] = None
+    order: 'ItemOrder' = field(default=None)
     menu_day : 'MenuDay' = field(repr=False, default=None)
+
+@dataclass
+class ItemOrder:
+    """
+    Reprezentuje objednávku položky.
+    """
+    can_cancel: bool
+    can_update: bool
+    menu_item: 'MenuItem' = field(repr=False, default=None)
 
 @dataclass
 class Boarder:
@@ -202,8 +210,7 @@ class Primirest:
 
                         if id_menu_day in menu_orders:
                             if item_id in menu_orders[id_menu_day]["item_ids"]:
-                                menu_item.is_ordered = True
-                                menu_item.order_info = {"can_cancel": menu_orders[id_menu_day]["can_cancel"], "can_update": menu_orders[id_menu_day]["can_update"]}
+                                menu_item.order = ItemOrder(can_cancel=menu_orders[id_menu_day]["can_cancel"], can_update=menu_orders[id_menu_day]["can_update"], menu_item=menu_item)
 
                         menu_day.items.append(menu_item)
                     
