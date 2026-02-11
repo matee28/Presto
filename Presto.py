@@ -1,4 +1,5 @@
 from PrimirestAPI import Primirest, MenuDay
+from FoodRecommend import FoodRecommend
 from getpass import getpass
 import re
 from datetime import date
@@ -31,5 +32,15 @@ print("Přihlášen jako: " + primirest.boarder.name)
 # print(primirest.order(primirest.unit.purchase_places[0].menus[2].menu_days[0].items[0]))
 # print(primirest.unit.purchase_places[0].menus[2].menu_days[0].items)
 # print(primirest.boarder.account)
+
+
+food_recommend = FoodRecommend(debug=True)
+
+consumptions = get_main_courses(primirest.get_boarder_consumptions(date(2020, 1, 1), date(2030, 1, 1)))
+
+for i in range(5):
+    menu = get_main_courses([item.description for item in primirest.unit.purchase_places[0].menus[0].menu_days[i].items])
+    recommended = food_recommend.recommend(consumptions, menu)
+    print(f"Na základě {len(consumptions)} jídel vybráno: {recommended}")
 
 primirest.logout()
