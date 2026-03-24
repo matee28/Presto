@@ -17,10 +17,18 @@ def get_soup(menu_day: MenuDay):
         return re.split(r',\s*(?=[A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ])', menu_day.items[0].description)[-1].strip()
     return ""
 
+if not os.path.exists(".env"):
+    env_username = input("E-mail: ").strip()
+    env_password = getpass("Heslo: ")
+    with open(".env", "w", encoding="utf-8") as f:
+        f.write(f"PRESTO_USERNAME={env_username}\n")
+        f.write(f"PRESTO_PASSWORD={env_password}\n")
+    print("Přihlašovací údaje byly uloženy.\n")
+
 load_dotenv()
 
-username = os.getenv("PRESTO_USERNAME") # input("E-mail: ").strip()
-password = os.getenv("PRESTO_PASSWORD") # getpass("Heslo: ")
+username = os.getenv("PRESTO_USERNAME")
+password = os.getenv("PRESTO_PASSWORD")
 
 primirest = Primirest(username=username, password=password)
 
