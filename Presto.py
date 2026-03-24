@@ -3,6 +3,8 @@ from FoodRecommend import FoodRecommend
 from getpass import getpass
 import re
 from datetime import date
+from dotenv import load_dotenv
+import os
 
 def get_main_courses(consumptions):
     ret = []
@@ -15,9 +17,10 @@ def get_soup(menu_day: MenuDay):
         return re.split(r',\s*(?=[A-ZÁČĎÉĚÍŇÓŘŠŤÚŮÝŽ])', menu_day.items[0].description)[-1].strip()
     return ""
 
+load_dotenv()
 
-username = input("E-mail: ").strip()
-password = getpass("Heslo: ")
+username = os.getenv("PRESTO_USERNAME") # input("E-mail: ").strip()
+password = os.getenv("PRESTO_PASSWORD") # getpass("Heslo: ")
 
 primirest = Primirest(username=username, password=password)
 
