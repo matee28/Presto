@@ -227,6 +227,64 @@ class Primirest:
     def __update_menu_days_and_items(self, menu: Menu):
         menu.menu_days.clear()
         self.__get_menu_days_and_items(menu)
+    
+    def __update_menu_day_from_response(self, menu_day: MenuDay, response_data: dict):
+        """
+        Aktualizuje den v menu na základě odpovědi z již provedeného API volání (order/cancel).
+        """
+        if "Day" not in response_data or "Orders" not in response_data:
+            return
+        
+        day_data = response_data["Day"]
+        orders_data = response_data["Orders"]
+        
+        # vytvoreni mapy objednavek pro rychle hledani
+        menu_orders = {}
+        for order in orders_data:
+            menu_day_id = int(order["IDMenuDay"])
+            menu_orders[menu_day_id] = {
+                "can_cancel": bool(order["CanCancel"]),
+                "can_update": bool(order["CanUpdate"]),
+                "item_ids": [int(item["IDItem"]) for item in order["Items"]]
+            }
+        
+        # nalezeni spravneho dne v menu
+        target_menu_day = None
+        for md in menu_day.menu.menu_days:
+            if md.id == menu_day.id:
+                target_menu_day = md
+                break
+        
+        if not target_menu_day:
+            return
+        
+        # aktualizace polozek menu dne
+        target_menu_day.items.clear()
+        
+        for item_data in day_data["Items"]:
+            item_id = int(item_data["Flags"][0]["IDEntity"])
+            item_description = item_data["Description"]
+            item_price = float(item_data["BoarderTotalPriceVat"])
+            item_can_order = bool(item_data["CanOrder"])
+            
+            menu_item = MenuItem(
+                id=item_id,
+                description=item_description,
+                price=item_price,
+                can_order=item_can_order,
+                menu_day=target_menu_day
+            )
+            
+            # kontrola zda je polozka objednana
+            if target_menu_day.id in menu_orders:
+                if item_id in menu_orders[target_menu_day.id]["item_ids"]:
+                    menu_item.order = ItemOrder(
+                        can_cancel=menu_orders[target_menu_day.id]["can_cancel"],
+                        can_update=menu_orders[target_menu_day.id]["can_update"],
+                        menu_item=menu_item
+                    )
+            
+            target_menu_day.items.append(menu_item)
                     
     def get_boarder_consumptions(self, start: date, end: date):
         url = f"https://mujprimirest.cz/ajax/{self.language}/consumptions/{self.boarder.id}/index?id={self.boarder.id}&from={start.strftime('%d.%m.%Y')}&to={end.strftime('%d.%m.%Y')}&_={self.__ts()}"
@@ -243,9 +301,11 @@ class Primirest:
         req = self.session.get(url)
 
         if req.ok:
-            self.__update_boarder_balance()
-            self.__update_menu_days_and_items(item.menu_day.menu)
             result = json.loads(req.text)
+            
+            self.__update_boarder_balance()
+            self.__update_menu_day_from_response(item.menu_day, result)
+            
             return {"success": result["Success"], "message": result["Message"]}
         else:
             raise Exception("Chyba při objednávání. HTTP status code: " + str(req.status_code))
@@ -270,9 +330,11 @@ class Primirest:
             req = self.session.get(url)
 
             if req.ok:
-                self.__update_boarder_balance()
-                self.__update_menu_days_and_items(menu_day.menu)
                 result = json.loads(req.text)
+                
+                self.__update_boarder_balance()
+                self.__update_menu_day_from_response(menu_day, result)
+                
                 return {"success": result["Success"], "message": result["Message"]}
             else:
                 raise Exception("Chyba při rušení objednávky. HTTP status code: " + str(req.status_code))
